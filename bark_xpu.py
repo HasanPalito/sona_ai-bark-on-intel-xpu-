@@ -1,4 +1,5 @@
 from transformers import AutoProcessor, AutoModel
+#make sure you install intel_extension_for_pytorch
 import intel_extension_for_pytorch as torch
 import torch as tp
 import scipy
@@ -11,7 +12,7 @@ print(f"Device selected: {device}")
 # Load model and processor
 model = AutoModel.from_pretrained("suno/bark-small")
 #using half precission ,horrible result
-# model = AutoModel.from_pretrained("suno/bark-small", torch_dtype=torch.float16)
+#model = AutoModel.from_pretrained("suno/bark-small", torch_dtype=tp.float16)
 
 processor = AutoProcessor.from_pretrained("suno/bark-small")
 
@@ -19,9 +20,8 @@ processor = AutoProcessor.from_pretrained("suno/bark-small")
 # sampling_rate = 24000
 sampling_rate = model.generation_config.sample_rate
 
-#model = torch.optimize_transformers(model, inplace=True, dtype=tp.float16, quantization_config=True, device=device)
-#model = model.to_bettertransformer() not working :(
-
+# using bettertransformer(optional)
+model = model.to_bettertransformer()
 # enable CPU offload
 #model.enable_cpu_offload() not working :(
 
@@ -37,11 +37,16 @@ start=time.time()
 speech_values = model.generate(**inputs, do_sample=True)
 end=time.time()
 
-# Convert speech_values to numpy array on the same device (xpu)
+#if u are using half precission
+#Convert speech_values to float32 because scipy doesnt support fp16
+#speech_values_float32 = speech_values.to(tp.float32)
+#speech_values_numpy = speech_values_float32.cpu().numpy().squeeze()
+
+#if u are using full precission
 speech_values_numpy = speech_values.cpu().numpy().squeeze()
 
 # Write to WAV file
-scipy.io.wavfile.write("bark_out2.wav", rate=sampling_rate, data=speech_values_numpy)
+scipy.io.wavfile.write("bark_out_better_transformer_fp16.wav", rate=sampling_rate, data=speech_values_numpy)
 
 # Print device to confirm
 print(f"Model loaded on {device}. generation time:{end-start}")
