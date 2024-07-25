@@ -1,4 +1,5 @@
 in this test , i am using intel arc A750 with 8gb vram
+feel free to contact me, if you have question you want to discuss regarding this
 
 stat generation time:
 
